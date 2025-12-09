@@ -1,7 +1,7 @@
 package com.prueba.gestion_restaurante_back.model.customer;
 
 public enum RangeLevel {
-    BRONZE(5),
+    BRONCE(5),
     PLATA(10),
     ORO(15);
 

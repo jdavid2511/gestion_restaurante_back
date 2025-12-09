@@ -17,6 +17,9 @@ public class Customer {
     private Long id;
 
     @Column(nullable = false)
+    private String nit;
+
+    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)
@@ -28,11 +31,9 @@ public class Customer {
     @Column(nullable = false)
     private Boolean isCustomerVip = false;
 
-    @Column(nullable = false)
     private int points = 0;
 
-    @Column(nullable = false)
-    private RangeLevel rangeLevel = RangeLevel.BRONZE;
+    private RangeLevel rangeLevel = RangeLevel.BRONCE;
 
     public void addPoints(Integer points) {
         this.points += points;
@@ -45,7 +46,7 @@ public class Customer {
         } else if (points >= 50) {
             this.rangeLevel = RangeLevel.PLATA;
         } else {
-            this.rangeLevel = RangeLevel.BRONZE;
+            this.rangeLevel = RangeLevel.BRONCE;
         }
     }
 }

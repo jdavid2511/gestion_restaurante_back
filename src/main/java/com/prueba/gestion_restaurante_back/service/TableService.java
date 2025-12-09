@@ -31,7 +31,7 @@ public class TableService {
 
     @Transactional
     public TableDTO updateTable(Long id, TableDTO tableDTO) {
-        RestaurantTable table = tableRepository.findById(id).orElseThrow(() -> new RuntimeException());
+        RestaurantTable table = tableRepository.findById(id).orElseThrow(() -> new RuntimeException("no existe mesa"));
 
         table.setTableNumber(tableDTO.getTableNumber());
         table.setCapacity(tableDTO.getCapacity());
@@ -39,7 +39,7 @@ public class TableService {
         table.setIsTableVip(tableDTO.getIsTableVip());
 
         RestaurantTable updatedTable = tableRepository.save(table);
-        return convertToDTO(table);
+        return convertToDTO(updatedTable);
     }
 
     @Transactional
@@ -60,7 +60,7 @@ public class TableService {
     }
 
     public List<TableDTO> getAvalibleTables(Integer capacity) {
-        return tableRepository.findByCapacity(capacity, TableStatus.DISPONIBLE).stream()
+        return tableRepository.findAvalibleTable(capacity).stream()
                 .map(this::convertToDTO).collect(Collectors.toList());
     }
 

@@ -15,9 +15,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByStatus(ReservationStatus status);
 
-    @Query("SELECT r FROM Reservation r WHERE r.status IN ('PENDIENTE', 'CONFIRMADA') AND r.table.id = :tableId " +
-            "AND r.reservationDate < :endTime " +
-            "AND FUNCION('date_add', r.reservationDate, r.durationHours, 'HOUR') > :startTime")
+    @Query(value = "SELECT * FROM reservations r WHERE r.status IN ('PENDIENTE', 'CONFIRMADA') AND r.table_id = :tableId " +
+            "AND r.reservation_date < :endTime " +
+            "AND (r.reservation_date + (r.duration_hours || ' hours')::interval) > :startTime",
+            nativeQuery = true)
     List<Reservation> findConflictingReservations(@Param("tableId") Long tableId,
                                                   @Param("startTime") LocalDateTime startTime,
                                                   @Param("endTime") LocalDateTime endTime);

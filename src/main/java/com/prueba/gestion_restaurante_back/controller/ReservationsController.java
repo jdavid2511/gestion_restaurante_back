@@ -32,6 +32,11 @@ public class ReservationsController {
         return ResponseEntity.ok(reservationService.createReservation(reservationDTO));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ReservationDTO> updateReservation(@PathVariable Long id, @RequestBody ReservationDTO reservationDTO) {
+        return ResponseEntity.ok(reservationService.updateReservation(id, reservationDTO));
+    }
+
     @PutMapping("/{id}/confirm")
     public ResponseEntity<ReservationDTO> confirmReservation(@PathVariable Long id) {
         return ResponseEntity.ok(reservationService.confirmReservation(id));

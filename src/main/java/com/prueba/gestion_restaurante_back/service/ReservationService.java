@@ -1,6 +1,8 @@
 package com.prueba.gestion_restaurante_back.service;
 
+import com.prueba.gestion_restaurante_back.dto.CustomerDTO;
 import com.prueba.gestion_restaurante_back.dto.ReservationDTO;
+import com.prueba.gestion_restaurante_back.dto.TableDTO;
 import com.prueba.gestion_restaurante_back.model.customer.Customer;
 import com.prueba.gestion_restaurante_back.model.reservation.Reservation;
 import com.prueba.gestion_restaurante_back.model.reservation.ReservationStatus;
@@ -43,7 +45,7 @@ public class ReservationService {
         validateOperatingHours(reservationDTO.getReservationDate());
 
         //Buscar o crear cliente
-        Customer customer = customerService.findOrCreateCustomer(reservationDTO.getCustomerDTO());
+        Customer customer = convertToEntity(reservationDTO.getCustomerDTO());
 
         //Bucar mesa
         RestaurantTable table = restaurantTableRepository.findById(reservationDTO.getTableId())
@@ -72,9 +74,64 @@ public class ReservationService {
         reservation.setCustomer(customer);
         reservation.setTable(table);
         reservation.setReservationDate(reservationDTO.getReservationDate());
+        reservation.setNumberOfPeople(reservationDTO.getNumberOfPeople());
         reservation.setDurationHours(reservationDTO.getDurationHours());
         reservation.setStatus(ReservationStatus.PENDIENTE);
         reservation.setCreatedAt(LocalDateTime.now());
+
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        //Actualizar Reserva
+        table.setStatus(TableStatus.RESERVADO);
+        restaurantTableRepository.save(table);
+
+        return convertToDTO(savedReservation);
+    }
+
+    @Transactional
+    public ReservationDTO updateReservation(Long id, ReservationDTO reservationDTO) {
+
+        //validar fecha futura
+        if (reservationDTO.getReservationDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("La reserva no puede ser de un fecha anterior");
+        }
+
+        //validar horario actual
+        validateOperatingHours(reservationDTO.getReservationDate());
+
+
+        //Buscar o crear cliente
+        Customer customer = convertToEntity(reservationDTO.getCustomerDTO());
+
+        //Bucar mesa
+        RestaurantTable table = restaurantTableRepository.findById(reservationDTO.getTableId())
+                .orElseThrow(() -> new RuntimeException("La mesa no existe"));
+
+        //validar capacidad
+        if (table.getCapacity() < reservationDTO.getNumberOfPeople()) {
+            throw new RuntimeException("El numero de personas supera la capacidad de la mesa");
+        }
+
+        //verificar si esta disponible
+        LocalDateTime endTime = reservationDTO.getReservationDate()
+                .plusMinutes((long)(reservationDTO.getDurationHours() * 60));
+
+        List<Reservation> conflicts = reservationRepository.findConflictingReservations(table.getId(), reservationDTO.getReservationDate(), endTime);
+
+        if (!conflicts.isEmpty()) {
+            if (customer.getIsCustomerVip()) {
+                return addToWaitlist(customer, reservationDTO);
+            }
+            throw new RuntimeException("La mesa no esta disponible para la fecha requerida");
+        }
+
+        Reservation reservation = reservationRepository.findById(id).orElseThrow(() -> new RuntimeException("La reserva no existe"));
+        //actualizar reserva
+        reservation.setCustomer(customer);
+        reservation.setTable(table);
+        reservation.setReservationDate(reservationDTO.getReservationDate());
+        reservation.setNumberOfPeople(reservationDTO.getNumberOfPeople());
+        reservation.setDurationHours(reservationDTO.getDurationHours());
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
@@ -161,12 +218,26 @@ public class ReservationService {
         throw new RuntimeException("No hay mesas disponibles, fué agregado la lista VIP del restaurante");
     }
 
+    public Customer convertToEntity(CustomerDTO customerDTO) {
+        Customer customer = new Customer();
+        customer.setId(customerDTO.getId());
+        customer.setNit(customerDTO.getNit());
+        customer.setName(customerDTO.getName());
+        customer.setEmail(customerDTO.getEmail());
+        customer.setPhone(customerDTO.getPhone());
+        customer.setRangeLevel(customerDTO.getRangeLevel());
+        customer.setPoints(customerDTO.getPoints());
+        customer.setPoints(customerDTO.getPoints());
+
+        return customer;
+    }
+
     private ReservationDTO convertToDTO(Reservation reservation) {
         ReservationDTO reservationDTO = new ReservationDTO();
         reservationDTO.setId(reservation.getId());
-        reservationDTO.setCustomerDTO(customerService.covertToDTO(reservation.getCustomer()));
+        reservationDTO.setCustomerDTO(customerService.convertToDTO(reservation.getCustomer()));
         reservationDTO.setTableId(reservation.getTable().getId());
-        reservation.setReservationDate(reservation.getReservationDate());
+        reservationDTO.setReservationDate(reservation.getReservationDate());
         reservationDTO.setNumberOfPeople(reservation.getNumberOfPeople());
         reservationDTO.setDurationHours(reservation.getDurationHours());
         reservationDTO.setStatus(reservation.getStatus());
