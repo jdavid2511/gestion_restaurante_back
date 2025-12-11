@@ -2,7 +2,6 @@ package com.prueba.gestion_restaurante_back.service;
 
 import com.prueba.gestion_restaurante_back.dto.CustomerDTO;
 import com.prueba.gestion_restaurante_back.dto.ReservationDTO;
-import com.prueba.gestion_restaurante_back.dto.TableDTO;
 import com.prueba.gestion_restaurante_back.model.customer.Customer;
 import com.prueba.gestion_restaurante_back.model.reservation.Reservation;
 import com.prueba.gestion_restaurante_back.model.reservation.ReservationStatus;
@@ -10,15 +9,11 @@ import com.prueba.gestion_restaurante_back.model.restaurant_config.RestaurantCon
 import com.prueba.gestion_restaurante_back.model.table.RestaurantTable;
 import com.prueba.gestion_restaurante_back.model.table.TableStatus;
 import com.prueba.gestion_restaurante_back.model.waitlist.WaitList;
-import com.prueba.gestion_restaurante_back.repository.ReservationRepository;
-import com.prueba.gestion_restaurante_back.repository.RestaurantConfigRepository;
-import com.prueba.gestion_restaurante_back.repository.RestaurantTableRepository;
-import com.prueba.gestion_restaurante_back.repository.WaitlistRepository;
+import com.prueba.gestion_restaurante_back.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -126,7 +121,6 @@ public class ReservationService {
         }
 
         Reservation reservation = reservationRepository.findById(id).orElseThrow(() -> new RuntimeException("La reserva no existe"));
-        //actualizar reserva
         reservation.setCustomer(customer);
         reservation.setTable(table);
         reservation.setReservationDate(reservationDTO.getReservationDate());
@@ -225,8 +219,8 @@ public class ReservationService {
         customer.setName(customerDTO.getName());
         customer.setEmail(customerDTO.getEmail());
         customer.setPhone(customerDTO.getPhone());
+        customer.setIsCustomerVip(customerDTO.getIsCustomerVip());
         customer.setRangeLevel(customerDTO.getRangeLevel());
-        customer.setPoints(customerDTO.getPoints());
         customer.setPoints(customerDTO.getPoints());
 
         return customer;
